@@ -1,0 +1,13 @@
+numpy
+nltk
+torch
+tqdm
+scikit-learn
+sentence-transformers
+openai
+python-dotenv
+google-generativeai
+pandas
+bert-score
+accelerate
+bitsandbytes

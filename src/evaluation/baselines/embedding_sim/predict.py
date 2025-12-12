@@ -4,9 +4,9 @@ from sentence_transformers import SentenceTransformer, util
 import torch
 from tqdm import tqdm
 
-TRAIN_FILE = "src/data/processed/rdr2/arthur_dialogue_pairs_train.jsonl"
-TEST_FILE = "src/data/processed/rdr2/arthur_dialogue_pairs_test.jsonl"
-OUTPUT_FILE = "src/data/baselines/retrieval/predictions.jsonl"
+TRAIN_FILE = "src/data/processed/rdr2/dialogue_pairs_train.jsonl"
+TEST_FILE = "src/data/processed/rdr2/dialogue_pairs_test.jsonl"
+OUTPUT_FILE = "src/data/baselines/embedding_sim/predictions.jsonl"
 
 
 def load_jsonl(path):
@@ -61,6 +61,7 @@ def predict_retrieval(train_data, test_data, model, corpus_embeddings, responses
             "utterance": ex.get("utterance", ""),
             "response_speaker": ex.get("response_speaker", ""),
             "gold_response": ex.get("response", ""),
+            "gold_response_action": ex.get("gold_response_action", "none"),
             "predicted_response": best_response
         })
 
@@ -87,7 +88,7 @@ def main():
         for ex in predictions:
             f.write(json.dumps(ex) + "\n")
 
-    print(f"✅ Wrote {len(predictions)} retrieval baseline predictions to {OUTPUT_FILE}")
+    print(f"Wrote {len(predictions)} retrieval baseline predictions to {OUTPUT_FILE}")
 
 
 if __name__ == "__main__":

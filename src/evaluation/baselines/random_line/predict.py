@@ -22,6 +22,7 @@ def predict(dialogues, all_lines):
             "utterance": ex.get("utterance", ""),
             "response_speaker": ex.get("response_speaker", ""),
             "gold_response": ex.get("response", ""),
+            "gold_response_action": ex.get("gold_response_action", "none"),
             "predicted_response": random_line
         })
     return predictions

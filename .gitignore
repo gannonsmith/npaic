@@ -1,6 +1,5 @@
+.env
 env/
 data/
-*.jsonl
-*.json
-*.txt
-*.pdf
+models/
+*__pycache__*

@@ -3,7 +3,7 @@ from pathlib import Path
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 from tqdm import tqdm
-from src.util import build_prompt
+from src.util.build_prompt import build_prompt
 
 BASE_MODEL_PATH = "models/base/qwen2.5-3b"
 TEST_DATA_PATH = "data/splits/dialogue_pairs_test.jsonl"
@@ -32,7 +32,7 @@ def main():
     print(f"Test data loaded")
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as outfile:
-        for ex in tqdm(test_data, desc="Generating"):
+        for ex in tqdm(test_data, desc="Generating..."):
             prompt = build_prompt(ex)
             inputs = tokenizer(prompt, return_tensors="pt").to(device)
 
@@ -40,8 +40,7 @@ def main():
                 **inputs,
                 max_new_tokens=80,
                 temperature=0.3,
-                top_p=0.8,
-                early_stopping=True
+                top_p=0.8
             )
 
             decoded = tokenizer.decode(output_ids[0], skip_special_tokens=True)

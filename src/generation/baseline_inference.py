@@ -39,8 +39,9 @@ def main():
             output_ids = model.generate(
                 **inputs,
                 max_new_tokens=80,
-                temperature=0.7,
-                top_p=0.9
+                temperature=0.3,
+                top_p=0.8,
+                early_stopping=True
             )
 
             decoded = tokenizer.decode(output_ids[0], skip_special_tokens=True)

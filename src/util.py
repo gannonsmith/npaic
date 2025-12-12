@@ -7,5 +7,6 @@ def build_prompt(example):
     return (
         f"### Context:\n{example['context']}\n\n"
         f"### {example['speaker']} says:\n{example['utterance']}\n\n"
-        f"### Respond as {example['response_speaker']}:\n"
+        f"### Respond as {example['response_speaker']} the last utterance only.\n\n"
+        f"{example['response_speaker']}:\n"
     )

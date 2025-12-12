@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 from tqdm import tqdm
 from src.util import build_prompt
@@ -21,18 +21,10 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_PATH)
     tokenizer.pad_token = tokenizer.eos_token
 
-    quantization_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_compute_dtype=torch.float16,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_use_double_quant=True,
-    )
-
     model = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL_PATH,
-        quantization_config=quantization_config,
+        dtype=torch.float16 if device == "cuda" else torch.float32,
         device_map="auto",
-        low_cpu_mem_usage=True,
     )
 
     test_data = load_jsonl(TEST_DATA_PATH)
@@ -40,8 +32,7 @@ def main():
     print(f"Test data loaded")
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as outfile:
-        # for ex in tqdm(test_data, desc="Generating"):
-        for i, ex in enumerate(test_data):
+        for ex in tqdm(test_data, desc="Generating"):
             prompt = build_prompt(ex)
             inputs = tokenizer(prompt, return_tensors="pt").to(device)
 
@@ -60,7 +51,7 @@ def main():
                 "context": ex.get("context", ""),
                 "speaker": ex.get("speaker", ""),
                 "utterance": ex.get("utterance", ""),
-                "response_speaker": ex.get("response_speajer", ""),
+                "response_speaker": ex.get("response_speaker", ""),
                 "gold_response": ex.get("response", ""),
                 "gold_response_action": ex.get("gold_response_action", "none"),
                 "predicted_response": prediction

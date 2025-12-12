@@ -10,4 +10,3 @@ google-generativeai
 pandas
 bert-score
 accelerate
-bitsandbytes

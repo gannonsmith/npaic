@@ -20,11 +20,6 @@ Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 def load_jsonl(path):
     with open(path, "r", encoding="utf-8") as f:
         return [json.loads(line) for line in f]
-    
-def write_jsonl(path, data_list):
-    with open(path, "w", encoding="utf-8") as f:
-        for item in data_list:
-            f.write(json.dumps(item) + "\n")
 
 def load_model():
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_PATH)
@@ -82,24 +77,26 @@ def summarize_knowledge(example, retriever, tokenizer, model):
 
 def process_splits(path, output_path, retriever, tokenizer, model):
     data = load_jsonl(path)
-    processed = []
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
     print(f"Generating summaries for: {path}")
-    for ex in tqdm(data):
-        memory_summary = summarize_memory(
-            ex["context"], tokenizer, model
-        )
-        kg_summary = summarize_knowledge(
-            ex, retriever, tokenizer, model
-        )
+    with open(output_path, "w", encoding="utf-8") as out_f:
+        for ex in tqdm(data):
+            memory_summary = summarize_memory(
+                ex["context"], tokenizer, model
+            )
+            kg_summary = summarize_knowledge(
+                ex, retriever, tokenizer, model
+            )
 
-        ex_out = dict(ex)
-        ex_out["memory_summary"] = memory_summary
-        ex_out["knowledge_summary"] = kg_summary
+            ex_out = dict(ex)
+            ex_out["memory_summary"] = memory_summary
+            ex_out["knowledge_summary"] = kg_summary
 
-        processed.append(ex_out)
+            out_f.write(json.dumps(ex_out + "\n"))
+            out_f.flush()
     
-    write_jsonl(output_path, processed)
     print(f"Saved summarized dataset to {output_path}")
 
 def main():

@@ -104,6 +104,7 @@ def process_splits(path, output_path, retriever, tokenizer, model):
 
 def main():
     tokenizer, model = load_model()
+    # tokenizer, model = None, None
 
     retriever = KnowledgeGraphRetriever()
 

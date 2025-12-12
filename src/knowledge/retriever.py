@@ -10,53 +10,63 @@ class KnowledgeGraphRetriever:
         matches = re.findall(r'<([^/]+?)>', context)
         extracted = {name.strip() for name in matches if name.strip() not in excluded_nodes}
         return list(extracted)
+    
+    @staticmethod
+    def _format_fact(source, target, data, prefix=""):
+        fact = f"{source} {data['type']} {target}. Details: {data.get('details', 'N/A')}"
+        if prefix:
+            return f"{prefix}: {fact}"
+        return fact
 
     def get_relevant_facts(self, mission: str, context: str, speaker: str, target: str):
+        """
+        Retrieves facts that connect the mission and the key characters 
+        (speaker, target) from Arthur's perspective, using the context for 
+        additional character mentions.
+        """
         relevant_facts = []
 
-        # Arthur's perspective on speaker
+        # Arthur's perspective on the current SPEAKER (e.g., Bill Williamson)
+        # Search: Arthur Morgan -> Relationship -> Speaker
         for s, t, data in self.kg.graph.edges("Arthur Morgan", data=True):
             if t == speaker:
-                fact = f"{s} {data['type']} {t}. Details: {data.get('details', 'N/A')}"
-                relevant_facts.append(fact)
-        
-        # Speaker-Target relationship (Direct connection, mainly Arthur's involvement)
+                relevant_facts.append(self._format_fact(s, t, data))
+
+        # Speaker-Target relationship (Direct connection)
         if self.kg.graph.has_node(speaker) and self.kg.graph.has_node(target):
             # Check for edge: Speaker -> Target
             for s, t, data in self.kg.graph.edges(speaker, data=True):
                 if t == target:
-                    fact = f"Direct Fact: {s} {data['type']} {t}. Details: {data.get('details', 'N/A')}"
-                    relevant_facts.append(fact)
+                    relevant_facts.append(self._format_fact(s, t, data))
             
             # Check for edge: Target -> Speaker
             for s, t, data in self.kg.graph.edges(target, data=True):
                 if t == speaker:
-                    fact = f"Direct Fact: {s} {data['type']} {t}. Details: {data.get('details', 'N/A')}"
-                    relevant_facts.append(fact)
+                    relevant_facts.append(self._format_fact(s, t, data))
 
         # Mission Context (What is the Mission about, and Arthur's involvement)
         # Search: Mission -> Relationship -> Entity
         for s, t, data in self.kg.graph.edges(mission, data=True):
-            fact = f"Mission Fact: {s} {data['type']} {t}. Details: {data.get('details', 'N/A')}"
-            relevant_facts.append(fact)
+            relevant_facts.append(self._format_fact(s, t, data, prefix="Mission Fact"))
 
         # Search: Arthur Morgan -> Relationship -> Mission
         for s, t, data in self.kg.graph.edges("Arthur Morgan", data=True):
             if t == mission:
-                fact = f"Arthur's Mission Involvement: {s} {data['type']} in mission {t}. Details: {data.get('details', 'N/A')}"
-                relevant_facts.append(fact)
-        
+                relevant_facts.append(self._format_fact(s, t, data, prefix="Arthur's Mission Involvement"))
+
+        # Contextually Relevant Character Facts
         excluded = {speaker, target, "Arthur Morgan", "action"}
         context_characters = self._extract_characters_from_context(context, excluded)
-
+        
         for char in context_characters:
             if self.kg.graph.has_node(char):
+                # Search: Arthur Morgan -> Relationship -> Context Character
                 for s, t, data in self.kg.graph.edges("Arthur Morgan", data=True):
                     if t == char:
-                        fact = f"Context Fact (Arthur's View): {s} {data['type']} {t}. Details: {data.get('details', 'N/A')}"
-                        relevant_facts.append(fact)
+                        relevant_facts.append(self._format_fact(s, t, data, prefix="Context Fact (Arthur's View)"))
 
-        return list(set(relevant_facts))
+        # Remove duplicates using the raw fact string as the key
+        return list(dict.fromkeys(relevant_facts))
 
 def main():
     example_data = {

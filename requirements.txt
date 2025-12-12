@@ -10,3 +10,4 @@ google-generativeai
 pandas
 bert-score
 accelerate
+networkx

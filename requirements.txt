@@ -11,3 +11,6 @@ pandas
 bert-score
 accelerate
 networkx
+wandb
+peft
+datasets

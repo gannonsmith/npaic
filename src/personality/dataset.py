@@ -1,6 +1,6 @@
 import json
 from torch.utils.data import Dataset
-from src.personality.prompt import build_prompt
+from src.util.build_prompt import build_prompt
 
 class PersonalityDataset(Dataset):
     def __init__(self, path, tokenizer, max_length=1024):

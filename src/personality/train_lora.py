@@ -1,6 +1,7 @@
 import torch
-from transformers import AutoTokenizer, AutoModelForCasualLM
+from transformers import AutoTokenizer, AutoModelForCausalLM
 from torch.utils.data import DataLoader
+from torch.amp import autocast
 import wandb
 from tqdm import tqdm
 from pathlib import Path
@@ -16,10 +17,10 @@ VAL_FILE = "data/summarized_splits/dialogue_pairs_val_summarized.jsonl"
 
 def train(
         num_epochs=3,
-        grad_accum=8,
+        grad_accum=4,
         log_every=50,
         save_every=500,
-        batch_size=2,
+        batch_size=4,
         lr=2e-4
     ):
     wandb.init(
@@ -30,9 +31,9 @@ def train(
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_PATH)
     tokenizer.pad_token = tokenizer.eos_token
 
-    model = AutoModelForCasualLM.from_pretrained(
+    model = AutoModelForCausalLM.from_pretrained(
         BASE_MODEL_PATH,
-        dtype=torch.float16,
+        dtype=torch.bfloat16,
         device_map="auto"
     )
 
@@ -47,7 +48,8 @@ def train(
 
     optimizer = torch.optim.AdamW(
         model.parameters(),
-        lr=lr
+        lr=lr,
+        fused=True
     )
 
     step = 0
@@ -57,18 +59,20 @@ def train(
         for batch in tqdm(train_loader, desc=f"Epoch {epoch}"):
             batch = {k: v.to(model.device) for k, v in batch.items()}
 
-            outputs = model(**batch)
-            loss = outputs.loss / grad_accum
+            with autocast(device_type="cuda", dtype=torch.bfloat16):
+                outputs = model(**batch)
+                loss = outputs.loss / grad_accum
+
             loss.backward()
 
-            if step % grad_accum == 0:
+            if (step + 1) % grad_accum == 0:
                 optimizer.step()
                 optimizer.zero_grad()
 
-            if step % log_every == 0:
+            if (step * grad_accum + 1) % log_every == 0:
                 wandb.log({"train_loss": loss.item() * grad_accum})
 
-            if step % save_every == 0 and step > 0:
+            if (step * grad_accum + 1) % save_every == 0:
                 save_path = f"{OUTPUT_DIR}/checkpoint_{epoch}_{step}"
                 Path(save_path).mkdir(parents=True, exist_ok=True)
                 model.save_pretrained(save_path)
@@ -90,3 +94,6 @@ def train(
     model.save_pretrained(OUTPUT_DIR)
     tokenizer.save_pretrained(OUTPUT_DIR)
     wandb.finish()
+
+if __name__ == "__main__":
+    train()

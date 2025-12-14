@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=lora_training
+#SBATCH --job-name=proj_gen_summaries
 #SBATCH --account=eecs595f25_class
 #SBATCH --partition=gpu
 #SBATCH --gpus=1
@@ -12,9 +12,9 @@
 #SBATCH --output=gen_summary.log
 
 
-echo "Starting lora training..."
+echo "Starting Inference on base model..."
 
 # Use these hyperparameters for your full SFT training
-python -m src.personality.train_lora
+python -m src.preprocessing.generate_summaries
 
-echo "Lora training complete."
+echo "Execution on full dataset finished."

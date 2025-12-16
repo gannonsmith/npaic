@@ -1,10 +1,14 @@
 from bert_score import score
-from bleu import compute_bleu
+from src.evaluation.bleu import compute_bleu
 import json
 
 # INPUT_PATH = "src/data/baselines/random_line/predictions.jsonl"
 # INPUT_PATH = "src/data/baselines/in_character_random/predictions.jsonl"
-INPUT_PATH = "src/data/baselines/embedding_sim/predictions.jsonl"
+# INPUT_PATH = "src/data/baselines/embedding_sim/predictions.jsonl"
+
+# INPUT_PATH = "results/predictions/base_model/predictions.jsonl"
+# INPUT_PATH = "results/predictions/finetuned_model/predictions.jsonl"
+INPUT_PATH = "results/predictions/correct_line/predictions.jsonl"
 
 def main():
     with open(INPUT_PATH) as f:

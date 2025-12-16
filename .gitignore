@@ -2,4 +2,6 @@
 env/
 data/
 models/
+results/
+*.sh
 *__pycache__*
